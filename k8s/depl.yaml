@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customers-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: AIT Template
+      service: customers
+  template:
+    metadata:
+      labels:
+        app: AIT Template
+        service: customers
+        sidecar.istio.io/inject: "true"
+        version: "1"
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+      - name: customers
+        image: ghcr.io/wofood/AIT Template_customers
+        resources:
+          requests:
+            memory: "500Mi"
+            cpu: "250m"
+          limits:
+            memory: "1G"
+            cpu: "500m"
+        ports:
+          - name: customers
+            protocol: TCP
+            containerPort: 3000
+        envFrom:
+          - configMapRef:
+              name: AIT Template-config
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 3
+          periodSeconds: 3
+          failureThreshold: 2
