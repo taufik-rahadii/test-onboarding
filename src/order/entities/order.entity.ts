@@ -8,6 +8,13 @@ export class Order extends BaseEntity {
   @Column()
   status: OrderStatusEnum;
 
-  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.order)
+  @Column({
+    type: 'bigint',
+  })
+  totalAmount: number;
+
+  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.order, {
+    cascade: ['insert'],
+  })
   orderDetails?: OrderDetail[];
 }
