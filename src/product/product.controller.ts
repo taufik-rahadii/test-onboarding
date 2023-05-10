@@ -14,7 +14,6 @@ import { MainPagingDTO } from 'src/common/dto/main-paging.dto';
 import { PaginationService } from 'src/utils/pagination.service';
 import { Product } from './entities/product.entity';
 import { DetailProductDto } from './dto/detail-product.dto';
-import { MessageService } from 'src/message/message.service';
 
 @Controller('/product')
 export class ProductController {
@@ -22,7 +21,6 @@ export class ProductController {
     private readonly productService: ProductService,
     private readonly responseService: ResponseService,
     private readonly paginationService: PaginationService<Product>,
-    private readonly messageService: MessageService,
   ) {}
 
   @Post()

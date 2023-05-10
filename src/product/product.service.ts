@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { FindOptionsOrder, Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
-import { OrderDirection } from 'src/common/dto/main-paging.dto';
 
 @Injectable()
 export class ProductService {
