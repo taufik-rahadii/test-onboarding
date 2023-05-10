@@ -10,5 +10,6 @@ import { PaginationService } from 'src/utils/pagination.service';
   imports: [TypeOrmModule.forFeature([Product])],
   providers: [ProductService, ResponseService, PaginationService],
   controllers: [ProductController],
+  exports: [TypeOrmModule, ProductService],
 })
 export class ProductModule {}
