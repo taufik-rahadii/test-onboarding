@@ -43,6 +43,7 @@ export class ProductController {
         paginate.take,
         paginate.sort,
       );
+
       return this.responseService.successCollection(
         productDatas.data,
         {
