@@ -16,7 +16,6 @@ import { PaginationService } from 'src/utils/pagination.service';
 import { Product } from './entities/product.entity';
 import { DetailProductDto } from './dto/detail-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { BaseController } from 'src/common/class/base-controller.class';
 
 @Controller('/product')
 export class ProductController {
