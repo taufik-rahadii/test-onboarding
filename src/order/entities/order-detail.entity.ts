@@ -14,6 +14,9 @@ export class OrderDetail extends BaseEntity {
   @Column()
   qty: number;
 
+  @Column()
+  amount: number;
+
   @ManyToOne(() => Order)
   @JoinColumn({ name: 'order_id' })
   order?: Order;
