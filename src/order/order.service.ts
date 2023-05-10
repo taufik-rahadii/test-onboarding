@@ -63,4 +63,33 @@ export class OrderService {
       throw error;
     }
   }
+
+  public async updateOrderStatus(id: string, status: OrderStatusEnum) {
+    try {
+      const order = await this.orderRepository.update(id, {
+        status,
+      });
+
+      return order;
+    } catch (error) {
+      console.log(error);
+
+      throw error;
+    }
+  }
+
+  public async getOrderById(id: string, withDetails = false) {
+    try {
+      const order = await this.orderRepository.findOne({
+        where: { id },
+        relations: withDetails ? ['orderDetails'] : undefined,
+      });
+
+      return order;
+    } catch (error) {
+      console.log(error);
+
+      throw error;
+    }
+  }
 }
