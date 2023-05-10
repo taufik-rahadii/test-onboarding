@@ -45,4 +45,18 @@ export class ProductService {
       throw error;
     }
   }
+
+  public async getProductById(id: string) {
+    try {
+      const product = await this.productRepo.findOne({
+        where: { id },
+      });
+
+      return product;
+    } catch (error) {
+      console.log(error);
+
+      throw error;
+    }
+  }
 }
