@@ -1,4 +1,11 @@
-import { IsIn, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsNumberString,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export enum OrderDirection {
   ASC,
@@ -6,13 +13,14 @@ export enum OrderDirection {
 }
 
 export class MainPagingDTO {
-  @IsNumber()
-  page: 0;
+  @IsNumberString()
+  page: number;
 
-  @IsNumber()
-  size: 10;
+  @IsNumberString()
+  size: number;
 
   @IsString()
+  @IsOptional()
   search: string;
 
   @IsString()
