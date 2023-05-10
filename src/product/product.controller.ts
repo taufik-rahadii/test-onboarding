@@ -1,10 +1,20 @@
-import { Body, Controller, Get, HttpStatus, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ResponseService } from 'src/response/response.service';
 import { MainPagingDTO } from 'src/common/dto/main-paging.dto';
 import { PaginationService } from 'src/utils/pagination.service';
 import { Product } from './entities/product.entity';
+import { DetailProductDto } from './dto/detail-product.dto';
+import { MessageService } from 'src/message/message.service';
 
 @Controller('/product')
 export class ProductController {
@@ -12,6 +22,7 @@ export class ProductController {
     private readonly productService: ProductService,
     private readonly responseService: ResponseService,
     private readonly paginationService: PaginationService<Product>,
+    private readonly messageService: MessageService,
   ) {}
 
   @Post()
@@ -57,6 +68,31 @@ export class ProductController {
       console.log(error);
 
       throw error;
+    }
+  }
+
+  @Get('/:id')
+  public async getProductById(@Param() { id }: DetailProductDto) {
+    try {
+      const product = await this.productService.getProductById(id);
+
+      if (!product) {
+        return this.responseService.error(
+          HttpStatus.NOT_FOUND,
+          null,
+          `Product with id ${id} was not found`,
+        );
+      }
+
+      return this.responseService.success(product, 'Success');
+    } catch (error) {
+      console.log(error);
+
+      throw this.responseService.error(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        [...error],
+        'Internal server error',
+      );
     }
   }
 }
