@@ -3,11 +3,12 @@ import {
   DeleteDateColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  BaseEntity as EntityRepo,
 } from 'typeorm';
 
-export class BaseEntity {
+export class BaseEntity extends EntityRepo {
   @PrimaryGeneratedColumn('uuid')
-  id?: number;
+  id?: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt?: Date;
