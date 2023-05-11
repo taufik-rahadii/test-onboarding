@@ -1,13 +1,10 @@
-import {
-  BadRequestException,
-  HttpStatus,
-  Logger,
-  ValidationPipe,
-} from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ErrorMessageInterface } from './response/response.interface';
 import { camelToSnake } from './utils/general-utils';
+import { SuccessFormatterInterceptor } from './common/interceptors/success-formatter.interceptor';
+import { ErrorFormatterInterceptor } from './common/interceptors/error-formatter.interceptor';
 
 const logger = new Logger('main');
 
@@ -32,21 +29,16 @@ async function bootstrap() {
           }
         }
 
-        return new BadRequestException({
-          response_schema: {
-            response_code: `${process.env.PROJECT_NAME}-${
-              process.env.SERVICE_NAME
-            }-${HttpStatus.BAD_REQUEST.toString()}`,
-            response_message: 'Bad Request',
-          },
-          response_output: {
-            errors: errorMessages,
-          },
+        throw new BadRequestException({
+          message: 'Bad Request',
+          errors: errorMessages,
         });
       },
     }),
   );
   app.setGlobalPrefix('/api');
+  app.useGlobalInterceptors(new SuccessFormatterInterceptor(new Reflector()));
+  app.useGlobalInterceptors(new ErrorFormatterInterceptor());
 
   await app.listen(process.env.HTTP_PORT || 4001, () => {
     logger.log(`Running on ${process.env.HTTP_PORT || 4001}`);
