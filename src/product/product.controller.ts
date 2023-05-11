@@ -1,9 +1,12 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -18,50 +21,34 @@ import { PaginationService } from 'src/utils/pagination.service';
 import { Product } from './entities/product.entity';
 import { DetailProductDto } from './dto/detail-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { Response } from 'express';
+import { SetResponseMessage } from 'src/common/decorators/set-response-message.decorator.ts';
 
 @Controller('/product')
 export class ProductController {
   constructor(
-    private readonly responseService: ResponseService,
     private readonly productService: ProductService,
     private readonly paginationService: PaginationService<Product>,
   ) {}
 
-  private returnsInternalServerError() {
-    return this.responseService.error(
-      HttpStatus.INTERNAL_SERVER_ERROR,
-      null,
-      'Internal server error',
-    );
-  }
-
-  private returnsNotFoundError() {
-    return this.responseService.error(
-      HttpStatus.NOT_FOUND,
-      null,
-      'Product Not Found',
-    );
-  }
-
   @Post()
+  @SetResponseMessage('Product created')
   async createProduct(@Body() createProductDto: CreateProductDto) {
     try {
-      return this.responseService.success(
-        await this.productService.createProduct(createProductDto),
-        'Created',
-      );
+      return await this.productService.createProduct(createProductDto);
     } catch (error) {
-      return this.returnsInternalServerError();
+      console.log(error);
+
+      throw error;
     }
   }
 
   @Get()
+  @SetResponseMessage('Success retrieve data')
   async listProduct(@Query() mainPagingDto: MainPagingDTO) {
     try {
       const paginate = this.paginationService.buildPaginateQuery(
         mainPagingDto,
-        ['name', 'price'],
+        ['name'],
       );
 
       const productDatas = await this.productService.listProduct(
@@ -70,83 +57,74 @@ export class ProductController {
         paginate.sort,
       );
 
-      return this.responseService.successCollection(
-        productDatas.data,
-        {
-          page: Number(mainPagingDto.page),
-          size: Number(mainPagingDto.size),
-          total: productDatas.size,
-        },
-        'Success',
-      );
+      return {
+        pagination: this.paginationService.buildPaginationResponse(
+          mainPagingDto,
+          productDatas.size,
+        ),
+        content: productDatas.data,
+      };
     } catch (error) {
-      return this.returnsInternalServerError();
+      console.log(error);
+
+      throw error;
     }
   }
 
   @Get('/:id')
-  public async getProductById(
-    @Param() { id }: DetailProductDto,
-    @Res() res: Response,
-  ) {
+  @SetResponseMessage('Success retrieve data')
+  public async getProductById(@Param() { id }: DetailProductDto) {
     try {
       const product = await this.productService.getProductById(id);
 
-      if (!product)
-        res.status(HttpStatus.BAD_REQUEST).json(this.returnsNotFoundError());
+      if (!product) throw new NotFoundException('Product not found');
 
-      res.json(this.responseService.success(product, 'Success'));
+      return product;
     } catch (error) {
-      res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json(this.returnsInternalServerError());
+      console.log(error);
+
+      throw error;
     }
   }
 
   @Put(':id')
+  @SetResponseMessage('Success update product')
   public async updateProduct(
     @Param() { id }: DetailProductDto,
     @Body() updateProductDto: UpdateProductDto,
-    @Res() res: Response,
   ) {
     try {
       const product = await this.productService.getProductById(id);
 
       if (!product)
-        res.status(HttpStatus.BAD_REQUEST).json(this.returnsNotFoundError());
+        throw new NotFoundException({ message: 'Product not found' });
 
       await this.productService.updateProduct(id, updateProductDto);
 
-      res.json(
-        this.responseService.success({ status: true }, 'Product updated'),
-      );
+      return { status: true };
     } catch (error) {
-      res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json(this.returnsInternalServerError());
+      console.log(error);
+
+      throw error;
     }
   }
 
   @Delete(':id')
-  public async deleteProduct(
-    @Param() { id }: DetailProductDto,
-    @Res() res: Response,
-  ) {
+  @SetResponseMessage('Product deleted')
+  public async deleteProduct(@Param() { id }: DetailProductDto) {
     try {
       const product = await this.productService.getProductById(id);
 
       if (!product)
-        res.status(HttpStatus.BAD_REQUEST).json(this.returnsNotFoundError());
+        throw new NotFoundException({ message: 'Product not found' });
 
       await this.productService.deleteProduct(id);
 
-      res.json(
-        this.responseService.success({ status: true }, 'Product deleted'),
-      );
+      return { status: true };
     } catch (error) {
-      res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json(this.returnsInternalServerError());
+      console.log(error);
+
+      throw error;
     }
   }
 }
