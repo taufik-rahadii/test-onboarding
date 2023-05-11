@@ -114,6 +114,8 @@ export class OrderService {
 
       return { data, size };
     } catch (error) {
+      console.log(error);
+
       throw error;
     }
   }
