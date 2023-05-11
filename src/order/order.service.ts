@@ -79,12 +79,16 @@ export class OrderService {
 
   public async getOrderById(id: string, withDetails = false) {
     try {
-      const order = await this.orderRepository.findOne({
-        where: { id },
-        relations: withDetails ? ['orderDetails'] : undefined,
-      });
+      const order = this.orderRepository
+        .createQueryBuilder('order')
+        .where('order.id = :id', { id });
+      if (withDetails) {
+        order
+          .leftJoinAndSelect('order.orderDetails', 'orderDetails')
+          .leftJoinAndSelect('orderDetails.product', 'product');
+      }
 
-      return order;
+      return await order.getOne();
     } catch (error) {
       console.log(error);
 

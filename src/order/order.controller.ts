@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -15,6 +16,7 @@ import { OrderStatusEnum } from './enums/order-status.enum';
 import { ListOrderDto } from './dto/list-order.dto';
 import { PaginationService } from 'src/utils/pagination.service';
 import { Order } from './entities/order.entity';
+import { Response } from 'express';
 
 @Controller('/order')
 export class OrderController {
@@ -122,6 +124,21 @@ export class OrderController {
         size: Number(listOrderDto.size),
         total,
       });
+    } catch (error) {
+      return this.returnsInternalServerError();
+    }
+  }
+
+  @Get(':id')
+  public async getOrderById(
+    @Param() { id }: OrderIdDto,
+    @Res() response: Response,
+  ) {
+    try {
+      const order = await this.orderService.getOrderById(id, true);
+      if (!order) response.status(404).json(this.returnsNotFoundError());
+
+      return this.responseService.success(order, 'Success retrieve order');
     } catch (error) {
       return this.returnsInternalServerError();
     }
