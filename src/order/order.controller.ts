@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -7,41 +8,22 @@ import {
   Param,
   Post,
   Query,
-  Res,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { ResponseService } from 'src/response/response.service';
 import { OrderIdDto } from './dto/order-id.dto';
 import { OrderStatusEnum } from './enums/order-status.enum';
 import { ListOrderDto } from './dto/list-order.dto';
 import { PaginationService } from 'src/utils/pagination.service';
 import { Order } from './entities/order.entity';
-import { Response } from 'express';
+import { SetResponseMessage } from 'src/common/decorators/set-response-message.decorator.ts';
 
 @Controller('/order')
 export class OrderController {
   constructor(
     private readonly orderService: OrderService,
-    private readonly responseService: ResponseService,
     private readonly paginateService: PaginationService<Order>,
   ) {}
-
-  private returnsInternalServerError() {
-    return this.responseService.error(
-      HttpStatus.INTERNAL_SERVER_ERROR,
-      null,
-      'Internal server error',
-    );
-  }
-
-  private returnsNotFoundError() {
-    return this.responseService.error(
-      HttpStatus.NOT_FOUND,
-      null,
-      'Order not found',
-    );
-  }
 
   private async checkIsOrderPending(id: string) {
     const order = await this.orderService.getOrderById(id);
@@ -49,81 +31,64 @@ export class OrderController {
   }
 
   @Post()
+  @SetResponseMessage('Order Created')
   public async createOrder(@Body() createOrderDto: CreateOrderDto) {
     try {
       const order = await this.orderService.createOrder(createOrderDto);
 
-      return this.responseService.success(order, 'Order created');
+      return order;
     } catch (error) {
-      return this.returnsInternalServerError();
+      console.log(error);
+
+      throw error;
     }
   }
 
   @Post(':id/finish')
-  public async finishOrder(@Param() { id }: OrderIdDto, @Res() res: Response) {
+  @SetResponseMessage('Order paid successfully')
+  public async finishOrder(@Param() { id }: OrderIdDto) {
     try {
       if (!(await this.checkIsOrderPending(id)))
-        res
-          .status(HttpStatus.BAD_REQUEST)
-          .json(
-            this.responseService.error(
-              HttpStatus.BAD_REQUEST,
-              null,
-              'Order has already been processed',
-            ),
-          );
+        throw new BadRequestException({
+          message: 'Order has already been processed',
+        });
 
       await this.orderService.updateOrderStatus(id, OrderStatusEnum.PAID);
 
-      res.json(
-        this.responseService.success(
-          { status: OrderStatusEnum.PAID },
-          'Order paid successfully',
-        ),
-      );
+      return { status: OrderStatusEnum.PAID };
     } catch (error) {
-      res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json(this.returnsInternalServerError());
+      console.log(error);
+
+      throw error;
     }
   }
 
   @Post(':id/cancel')
   @HttpCode(HttpStatus.OK)
-  public async cancelOrder(@Param() { id }: OrderIdDto, @Res() res: Response) {
+  @SetResponseMessage('Order canceled successfully')
+  public async cancelOrder(@Param() { id }: OrderIdDto) {
     try {
       if (!(await this.checkIsOrderPending(id)))
-        res
-          .status(HttpStatus.BAD_REQUEST)
-          .json(
-            this.responseService.error(
-              HttpStatus.BAD_REQUEST,
-              null,
-              'Order has already been processed',
-            ),
-          );
+        throw new BadRequestException({
+          message: 'Order has already been processed',
+        });
 
       await this.orderService.updateOrderStatus(id, OrderStatusEnum.CANCELED);
 
-      res.json(
-        this.responseService.success(
-          { status: OrderStatusEnum.CANCELED },
-          'Order canceled successfully',
-        ),
-      );
+      return { status: OrderStatusEnum.CANCELED };
     } catch (error) {
-      res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json(this.returnsInternalServerError());
+      console.log(error);
+
+      throw error;
     }
   }
 
   @Get()
+  @SetResponseMessage('Success retrieve data')
   public async listOrders(@Query() listOrderDto: ListOrderDto) {
     try {
       const paginate = this.paginateService.buildPaginateQuery(listOrderDto, [
         'status',
-        'totalAmount',
       ]);
 
       const relations =
@@ -137,32 +102,32 @@ export class OrderController {
         relations,
       );
 
-      return this.responseService.successCollection(data, {
-        page: Number(listOrderDto.page),
-        size: Number(listOrderDto.size),
-        total,
-      });
+      return {
+        pagination: this.paginateService.buildPaginationResponse(
+          listOrderDto,
+          total,
+        ),
+        content: data,
+      };
     } catch (error) {
-      return this.returnsInternalServerError();
+      console.log(error);
+
+      throw error;
     }
   }
 
+  @SetResponseMessage('Success retrieve order')
   @Get(':id')
-  public async getOrderById(
-    @Param() { id }: OrderIdDto,
-    @Res() response: Response,
-  ) {
+  public async getOrderById(@Param() { id }: OrderIdDto) {
     try {
       const order = await this.orderService.getOrderById(id, true);
-      if (!order) response.status(404).json(this.returnsNotFoundError());
+      if (!order) throw new BadRequestException({ message: 'Order not found' });
 
-      response.json(
-        this.responseService.success(order, 'Success retrieve order'),
-      );
+      return order;
     } catch (error) {
-      response
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json(this.returnsInternalServerError());
+      console.log(error);
+
+      throw error;
     }
   }
 }
