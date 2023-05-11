@@ -8,6 +8,7 @@ import {
   Post,
   Put,
   Query,
+  Res,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -17,6 +18,7 @@ import { PaginationService } from 'src/utils/pagination.service';
 import { Product } from './entities/product.entity';
 import { DetailProductDto } from './dto/detail-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { Response } from 'express';
 
 @Controller('/product')
 export class ProductController {
@@ -83,15 +85,21 @@ export class ProductController {
   }
 
   @Get('/:id')
-  public async getProductById(@Param() { id }: DetailProductDto) {
+  public async getProductById(
+    @Param() { id }: DetailProductDto,
+    @Res() res: Response,
+  ) {
     try {
       const product = await this.productService.getProductById(id);
 
-      if (!product) return this.returnsNotFoundError();
+      if (!product)
+        res.status(HttpStatus.BAD_REQUEST).json(this.returnsNotFoundError());
 
-      return this.responseService.success(product, 'Success');
+      res.json(this.responseService.success(product, 'Success'));
     } catch (error) {
-      return this.returnsInternalServerError();
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json(this.returnsInternalServerError());
     }
   }
 
@@ -99,32 +107,46 @@ export class ProductController {
   public async updateProduct(
     @Param() { id }: DetailProductDto,
     @Body() updateProductDto: UpdateProductDto,
+    @Res() res: Response,
   ) {
     try {
       const product = await this.productService.getProductById(id);
 
-      if (!product) return this.returnsNotFoundError();
+      if (!product)
+        res.status(HttpStatus.BAD_REQUEST).json(this.returnsNotFoundError());
 
       await this.productService.updateProduct(id, updateProductDto);
 
-      return this.responseService.success({ status: true }, 'Product updated');
+      res.json(
+        this.responseService.success({ status: true }, 'Product updated'),
+      );
     } catch (error) {
-      return this.returnsInternalServerError();
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json(this.returnsInternalServerError());
     }
   }
 
   @Delete(':id')
-  public async deleteProduct(@Param() { id }: DetailProductDto) {
+  public async deleteProduct(
+    @Param() { id }: DetailProductDto,
+    @Res() res: Response,
+  ) {
     try {
       const product = await this.productService.getProductById(id);
 
-      if (!product) return this.returnsNotFoundError();
+      if (!product)
+        res.status(HttpStatus.BAD_REQUEST).json(this.returnsNotFoundError());
 
       await this.productService.deleteProduct(id);
 
-      return this.responseService.success({ status: true }, 'Product deleted');
+      res.json(
+        this.responseService.success({ status: true }, 'Product deleted'),
+      );
     } catch (error) {
-      return this.returnsInternalServerError();
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json(this.returnsInternalServerError());
     }
   }
 }

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   Post,
@@ -59,44 +60,61 @@ export class OrderController {
   }
 
   @Post(':id/finish')
-  public async finishOrder(@Param() { id }: OrderIdDto) {
+  public async finishOrder(@Param() { id }: OrderIdDto, @Res() res: Response) {
     try {
       if (!(await this.checkIsOrderPending(id)))
-        return this.responseService.error(
-          HttpStatus.BAD_REQUEST,
-          null,
-          'Order has already been processed',
-        );
+        res
+          .status(HttpStatus.BAD_REQUEST)
+          .json(
+            this.responseService.error(
+              HttpStatus.BAD_REQUEST,
+              null,
+              'Order has already been processed',
+            ),
+          );
 
       await this.orderService.updateOrderStatus(id, OrderStatusEnum.PAID);
 
-      return this.responseService.success(
-        { status: OrderStatusEnum.PAID },
-        'Order paid successfully',
+      res.json(
+        this.responseService.success(
+          { status: OrderStatusEnum.PAID },
+          'Order paid successfully',
+        ),
       );
     } catch (error) {
-      return this.returnsInternalServerError();
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json(this.returnsInternalServerError());
     }
   }
 
   @Post(':id/cancel')
-  public async cancelOrder(@Param() { id }: OrderIdDto) {
+  @HttpCode(HttpStatus.OK)
+  public async cancelOrder(@Param() { id }: OrderIdDto, @Res() res: Response) {
     try {
       if (!(await this.checkIsOrderPending(id)))
-        return this.responseService.error(
-          HttpStatus.BAD_REQUEST,
-          null,
-          'Order has already been processed',
-        );
+        res
+          .status(HttpStatus.BAD_REQUEST)
+          .json(
+            this.responseService.error(
+              HttpStatus.BAD_REQUEST,
+              null,
+              'Order has already been processed',
+            ),
+          );
 
       await this.orderService.updateOrderStatus(id, OrderStatusEnum.CANCELED);
 
-      return this.responseService.success(
-        { status: OrderStatusEnum.CANCELED },
-        'Order canceled successfully',
+      res.json(
+        this.responseService.success(
+          { status: OrderStatusEnum.CANCELED },
+          'Order canceled successfully',
+        ),
       );
     } catch (error) {
-      return this.returnsInternalServerError();
+      res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json(this.returnsInternalServerError());
     }
   }
 
@@ -138,9 +156,13 @@ export class OrderController {
       const order = await this.orderService.getOrderById(id, true);
       if (!order) response.status(404).json(this.returnsNotFoundError());
 
-      return this.responseService.success(order, 'Success retrieve order');
+      response.json(
+        this.responseService.success(order, 'Success retrieve order'),
+      );
     } catch (error) {
-      return this.returnsInternalServerError();
+      response
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json(this.returnsInternalServerError());
     }
   }
 }
