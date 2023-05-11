@@ -6,7 +6,7 @@ import { ILike } from 'typeorm';
 export class PaginationService<T> {
   public buildPaginateQuery(
     { page, size, search, sort, order }: MainPagingDTO,
-    allowedToSearch?: string[],
+    allowedToSearch?: (keyof T)[],
   ) {
     const skip = page > 1 ? page * size - size : 0;
     const take = size;
