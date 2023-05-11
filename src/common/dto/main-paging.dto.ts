@@ -1,11 +1,4 @@
-import {
-  IsIn,
-  IsNotEmpty,
-  IsNumber,
-  IsNumberString,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsIn, IsNumberString, IsOptional, IsString } from 'class-validator';
 
 export enum OrderDirection {
   ASC,
