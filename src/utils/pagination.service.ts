@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MainPagingDTO } from 'src/common/dto/main-paging.dto';
+import { PaginationInterface } from 'src/response/response.interface';
 import { ILike } from 'typeorm';
 
 @Injectable()
@@ -30,6 +31,17 @@ export class PaginationService<T> {
       sort: {
         [sort]: order,
       },
+    };
+  }
+
+  public buildPaginationResponse(
+    dto: MainPagingDTO,
+    total: number,
+  ): PaginationInterface {
+    return {
+      page: Number(dto.page),
+      size: Number(dto.size),
+      total,
     };
   }
 }
