@@ -1,11 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from './entities/order.entity';
-import { In, Repository } from 'typeorm';
+import { FindOptionsOrder, FindOptionsWhere, In, Repository } from 'typeorm';
 import { OrderDetail } from './entities/order-detail.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatusEnum } from './enums/order-status.enum';
-import { ProductService } from 'src/product/product.service';
 import { CreateOrderDetailDto } from './dto/create-order-detail.dto';
 import { Product } from 'src/product/entities/product.entity';
 
@@ -89,6 +88,28 @@ export class OrderService {
     } catch (error) {
       console.log(error);
 
+      throw error;
+    }
+  }
+
+  public async listOrders(
+    skip: number,
+    take: number,
+    order: FindOptionsOrder<Order>,
+    where: FindOptionsWhere<Order> | FindOptionsWhere<Order>[],
+    relations: string[],
+  ) {
+    try {
+      const [data, size] = await this.orderRepository.findAndCount({
+        skip,
+        take,
+        order,
+        where,
+        relations,
+      });
+
+      return { data, size };
+    } catch (error) {
       throw error;
     }
   }
