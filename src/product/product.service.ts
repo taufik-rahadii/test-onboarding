@@ -69,4 +69,14 @@ export class ProductService {
       throw error;
     }
   }
+
+  public async deleteProduct(id: string) {
+    try {
+      return await this.productRepo.softDelete(id);
+    } catch (error) {
+      console.log(error);
+
+      throw error;
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
@@ -107,6 +108,21 @@ export class ProductController {
       await this.productService.updateProduct(id, updateProductDto);
 
       return this.responseService.success({ status: true }, 'Product updated');
+    } catch (error) {
+      return this.returnsInternalServerError();
+    }
+  }
+
+  @Delete(':id')
+  public async deleteProduct(@Param() { id }: DetailProductDto) {
+    try {
+      const product = await this.productService.getProductById(id);
+
+      if (!product) return this.returnsNotFoundError();
+
+      await this.productService.deleteProduct(id);
+
+      return this.responseService.success({ status: true }, 'Product deleted');
     } catch (error) {
       return this.returnsInternalServerError();
     }
