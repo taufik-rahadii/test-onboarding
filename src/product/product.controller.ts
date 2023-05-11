@@ -1,21 +1,16 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   NotFoundException,
   Param,
   Post,
   Put,
   Query,
-  Res,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
-import { ResponseService } from 'src/response/response.service';
 import { MainPagingDTO } from 'src/common/dto/main-paging.dto';
 import { PaginationService } from 'src/utils/pagination.service';
 import { Product } from './entities/product.entity';
